@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Photo & Frame Maker</title>
+    <title>തസ്കിയ്യ സമ്മേളനം - ഫോട്ടോ ഫ്രെയിം മേക്കർ</title>
     <!-- Cropper.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <style>
@@ -50,7 +50,6 @@
         #frameContainer {
             z-index: 2;
             pointer-events: none;
-            opacity: 0.85;
         }
         .image-to-crop {
             max-width: 100%;
@@ -90,7 +89,6 @@
             display: none;
             margin-top: 10px;
         }
-        /* വിജയകരമായി ഡൗൺലോഡ് ആയാൽ കാണിക്കുന്ന ബോക്സിനുള്ള സ്റ്റൈൽ */
         #successMsg {
             display: none;
             background-color: #d1e7dd;
@@ -107,33 +105,28 @@
 <body>
 
 <div class="container">
-    <h2>ഫോട്ടോ & ഫ്രെയിം അഡ്ജസ്റ്റർ</h2>
+    <h2>തസ്കിയ്യ സമ്മേളനം ഫോട്ടോ ഫ്രെയിം</h2>
     
     <div class="frame-box" id="mainBox">
-        <div class="placeholder-text" id="placeholder">ഫ്രെയിമും ഫോട്ടോയും ചേർക്കുക</div>
+        <div class="placeholder-text" id="placeholder">നിങ്ങളുടെ ഫോട്ടോ സെലക്ട് ചെയ്യുക</div>
         
         <div class="layer" id="photoContainer">
             <img id="photoToCrop" class="image-to-crop" alt="Photo">
         </div>
         
+        <!-- മുൻകൂട്ടി സെറ്റ് ചെയ്ത ഫ്രെയിം ഇമേജ് -->
         <div class="layer" id="frameContainer">
-            <img id="frameImg" class="image-to-crop" alt="Frame" style="display:none; width:100%; height:100%;">
+            <img id="frameImg" class="image-to-crop" src="frame.png" alt="Frame" style="width:100%; height:100%;">
         </div>
     </div>
 
     <div class="input-group">
-        1. ഫ്രെയിം (PNG) സെലക്ട് ചെയ്യുക:
-        <input type="file" id="frameInput" accept="image/*" onchange="loadFrame(event)">
-    </div>
-
-    <div class="input-group">
-        2. നിങ്ങളുടെ ഫോട്ടോ സെലക്ട് ചെയ്യുക:
+        നിങ്ങളുടെ ഫോട്ടോ സെലക്ട് ചെയ്യുക:
         <input type="file" id="uploadInput" accept="image/*" onchange="initPhotoCropper(event)">
     </div>
     
     <button class="download-btn" id="downloadBtn" onclick="downloadImage()">ഫോട്ടോ ഡൗൺലോഡ് ചെയ്യുക</button>
     
-    <!-- ഡൗൺലോഡ് വിജയകരമായാൽ വരുന്ന സന്ദേശം -->
     <div id="successMsg">✅ ഫോട്ടോ വിജയകരമായി ഡൗൺലോഡ് ആയിരിക്കുന്നു!</div>
 </div>
 
@@ -142,22 +135,10 @@
 <script>
     let photoCropper = null;
     let frameImageObj = new Image();
-    const customAspect = 2121 / 3000;
+    frameImageObj.crossOrigin = "anonymous";
+    frameImageObj.src = "frame.png"; // ഫ്രെയിമിന്റെ ഫയൽ പേര്
 
-    function loadFrame(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                frameImageObj.src = e.target.result;
-                const frameElement = document.getElementById('frameImg');
-                frameElement.src = e.target.result;
-                frameElement.style.display = 'block';
-                document.getElementById('placeholder').style.display = 'none';
-            }
-            reader.readAsDataURL(file);
-        }
-    }
+    const customAspect = 2121 / 3000;
 
     function initPhotoCropper(event) {
         const file = event.target.files[0];
@@ -169,7 +150,7 @@
                 
                 document.getElementById('placeholder').style.display = 'none';
                 document.getElementById('downloadBtn').style.display = 'block';
-                document.getElementById('successMsg').style.display = 'none'; // പുതിയ ഫോട്ടോ വെച്ചാൽ മെസ്സേജ് ഹൈഡ് ചെയ്യും
+                document.getElementById('successMsg').style.display = 'none';
 
                 if (photoCropper) {
                     photoCropper.destroy();
@@ -214,16 +195,15 @@
             ctx.drawImage(photoCanvas, 0, 0, 2121, 3000);
         }
 
-        if (frameImageObj.src) {
+        if (frameImageObj.complete) {
             ctx.drawImage(frameImageObj, 0, 0, 2121, 3000);
         }
 
         const link = document.createElement('a');
-        link.download = 'tazkiya-final-image.png';
+        link.download = 'tazkiya-sammelanam-photo.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
 
-        // ഡൗൺലോഡ് ആകുന്ന മുറയ്ക്ക് സ്ക്രീനിൽ വിജയാശംസ സന്ദേശം കാണിക്കും
         const successBox = document.getElementById('successMsg');
         successBox.style.display = 'block';
     }
