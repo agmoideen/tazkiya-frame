@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Photo & Frame Maker</title>
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            text-align: center;
+            padding: 15px;
+            margin: 0;
+        }
+        .container {
+            max-width: 400px;
+            background: white;
+            margin: auto;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #0b5ed7;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        .frame-box {
+            position: relative;
+            width: 280px;
+            height: 396px; /* 2121:3000 അനുപാതം */
+            margin: 0 auto 10px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+            border: 3px solid #0b5ed7;
+        }
+        .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #photoContainer {
+            z-index: 1;
+        }
+        #frameContainer {
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.85;
+        }
+        .image-to-crop {
+            max-width: 100%;
+            display: block;
+        }
+        .placeholder-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #6c757d;
+            font-size: 0.85rem;
+            z-index: 0;
+        }
+        .input-group {
+            margin-bottom: 12px;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .input-group input {
+            margin-top: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .download-btn {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            display: none;
+            margin-top: 10px;
+        }
+        /* വിജയകരമായി ഡൗൺലോഡ് ആയാൽ കാണിക്കുന്ന ബോക്സിനുള്ള സ്റ്റൈൽ */
+        #successMsg {
+            display: none;
+            background-color: #d1e7dd;
+            color: #0f5132;
+            padding: 10px;
+            margin-top: 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 1px solid #badbcc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>ഫോട്ടോ & ഫ്രെയിം അഡ്ജസ്റ്റർ</h2>
+    
+    <div class="frame-box" id="mainBox">
+        <div class="placeholder-text" id="placeholder">ഫ്രെയിമും ഫോട്ടോയും ചേർക്കുക</div>
+        
+        <div class="layer" id="photoContainer">
+            <img id="photoToCrop" class="image-to-crop" alt="Photo">
+        </div>
+        
+        <div class="layer" id="frameContainer">
+            <img id="frameImg" class="image-to-crop" alt="Frame" style="display:none; width:100%; height:100%;">
+        </div>
+    </div>
+
+    <div class="input-group">
+        1. ഫ്രെയിം (PNG) സെലക്ട് ചെയ്യുക:
+        <input type="file" id="frameInput" accept="image/*" onchange="loadFrame(event)">
+    </div>
+
+    <div class="input-group">
+        2. നിങ്ങളുടെ ഫോട്ടോ സെലക്ട് ചെയ്യുക:
+        <input type="file" id="uploadInput" accept="image/*" onchange="initPhotoCropper(event)">
+    </div>
+    
+    <button class="download-btn" id="downloadBtn" onclick="downloadImage()">ഫോട്ടോ ഡൗൺലോഡ് ചെയ്യുക</button>
+    
+    <!-- ഡൗൺലോഡ് വിജയകരമായാൽ വരുന്ന സന്ദേശം -->
+    <div id="successMsg">✅ ഫോട്ടോ വിജയകരമായി ഡൗൺലോഡ് ആയിരിക്കുന്നു!</div>
+</div>
+
+<!-- Cropper.js JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+    let photoCropper = null;
+    let frameImageObj = new Image();
+    const customAspect = 2121 / 3000;
+
+    function loadFrame(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                frameImageObj.src = e.target.result;
+                const frameElement = document.getElementById('frameImg');
+                frameElement.src = e.target.result;
+                frameElement.style.display = 'block';
+                document.getElementById('placeholder').style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function initPhotoCropper(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgElement = document.getElementById('photoToCrop');
+                imgElement.src = e.target.result;
+                
+                document.getElementById('placeholder').style.display = 'none';
+                document.getElementById('downloadBtn').style.display = 'block';
+                document.getElementById('successMsg').style.display = 'none'; // പുതിയ ഫോട്ടോ വെച്ചാൽ മെസ്സേജ് ഹൈഡ് ചെയ്യും
+
+                if (photoCropper) {
+                    photoCropper.destroy();
+                }
+
+                photoCropper = new Cropper(imgElement, {
+                    aspectRatio: customAspect,
+                    viewMode: 0,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: false,
+                    center: false,
+                    highlight: false,
+                    cropBoxMovable: false,
+                    cropBoxResizable: false,
+                    toggleDragModeOnDblclick: false,
+                });
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function downloadImage() {
+        if (!photoCropper) {
+            alert("ദയവായി ഫോട്ടോ സെലക്ട് ചെയ്യുക!");
+            return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 2121;
+        canvas.height = 3000;
+        const ctx = canvas.getContext('2d');
+
+        const photoCanvas = photoCropper.getCroppedCanvas({
+            width: 2121,
+            height: 3000,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+        });
+        if (photoCanvas) {
+            ctx.drawImage(photoCanvas, 0, 0, 2121, 3000);
+        }
+
+        if (frameImageObj.src) {
+            ctx.drawImage(frameImageObj, 0, 0, 2121, 3000);
+        }
+
+        const link = document.createElement('a');
+        link.download = 'tazkiya-final-image.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        // ഡൗൺലോഡ് ആകുന്ന മുറയ്ക്ക് സ്ക്രീനിൽ വിജയാശംസ സന്ദേശം കാണിക്കും
+        const successBox = document.getElementById('successMsg');
+        successBox.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
